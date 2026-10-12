@@ -1,0 +1,8 @@
+gemm
+gemm_emu
+results_ptxas.txt
+results/*
+!results/.gitkeep
+!results/notes.md
+__pycache__/
+*.ncu-rep
