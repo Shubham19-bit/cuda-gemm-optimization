@@ -30,7 +30,7 @@ bottleneck it fixes and which metric should move). Small, reviewable diffs.
 
 ## Code structure
 - `src/main.cu` - harness: init, cuBLAS reference, correctness check, timing, CSV.
-  Kernel ids: 0 cuBLAS FP32, 1–6 own FP32 kernels, **7 reserved for the owner's kernel**,
+  Kernel ids: 0 cuBLAS FP32, 1–6 own FP32 kernels, **7 = the owner's kernel (k7_mine, bank-conflict-free K6)**,
   8 WMMA FP16, 9 cuBLAS FP16 (tensor cores).
 - `src/kernels/kN_*.cuh` - one kernel per file + a `KNCfg` struct (`supports`, `grid`, `block`)
   + a `KN_KERNEL` macro. To add a kernel: new header, then add it to `KERNELS[]`,

@@ -13,7 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SIZE="${SIZE:-4096}"
-KERNELS="${KERNELS:-1 2 3 4 5 6 8}"
+KERNELS="${KERNELS:-1 2 3 4 5 6 7 8}"
 OUT=results/ncu
 mkdir -p "$OUT"
 

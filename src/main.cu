@@ -16,6 +16,7 @@
 #include "kernels/k4_blocktile_1d.cuh"
 #include "kernels/k5_blocktile_2d.cuh"
 #include "kernels/k6_vectorized.cuh"
+#include "kernels/k7_mine.cuh"
 #include "kernels/k8_wmma_fp16.cuh"
 
 #include <filesystem>
@@ -28,7 +29,7 @@ struct KernelInfo {
     double tol;       // normalised max-error tolerance vs cuBLAS FP32
 };
 
-// id 7 is reserved for YOUR OWN kernel (warp-tiling / double buffering), see PATHWAY.md
+// id 7 = K7, the owner's kernel: K6 with the shared-memory bank conflicts removed
 static const KernelInfo KERNELS[] = {
     {0, "cublas_fp32",     false, 1e-6},
     {1, "k1_naive",        false, 1e-4},
@@ -37,6 +38,7 @@ static const KernelInfo KERNELS[] = {
     {4, "k4_blocktile_1d", false, 1e-4},
     {5, "k5_blocktile_2d", false, 1e-4},
     {6, "k6_vectorized",   false, 1e-4},
+    {7, "k7_mine",         false, 1e-4},
     {8, "k8_wmma_fp16",    true,  2e-2},
     {9, "cublas_fp16_tc",  true,  2e-2},
 };
@@ -54,6 +56,7 @@ static bool supported(int id, int M, int N, int K) {
         case 4: return K4Cfg::supports(M, N, K);
         case 5: return K5Cfg::supports(M, N, K);
         case 6: return K6Cfg::supports(M, N, K);
+        case 7: return K7Cfg::supports(M, N, K);
         case 8: return K8Cfg::supports(M, N, K);
         default: return true;   // cuBLAS handles everything
     }
@@ -80,6 +83,7 @@ static void run_kernel(int id, int M, int N, int K, const DeviceBuffers& d, cubl
         case 4: LAUNCH(K4_KERNEL, K4Cfg::grid(M, N), K4Cfg::block(), M, N, K, d.A, d.B, d.C); break;
         case 5: LAUNCH(K5_KERNEL, K5Cfg::grid(M, N), K5Cfg::block(), M, N, K, d.A, d.B, d.C); break;
         case 6: LAUNCH(K6_KERNEL, K6Cfg::grid(M, N), K6Cfg::block(), M, N, K, d.A, d.B, d.C); break;
+        case 7: LAUNCH(K7_KERNEL, K7Cfg::grid(M, N), K7Cfg::block(), M, N, K, d.A, d.B, d.C); break;
         case 8: LAUNCH(K8_KERNEL, K8Cfg::grid(M, N), K8Cfg::block(), M, N, K, d.A16, d.B16, d.C); break;
         case 9:
             // Same column-major trick, FP16 inputs, FP32 output and accumulation (tensor cores)
@@ -125,7 +129,6 @@ static void usage() {
         "            [--csv PATH] [--no-check]\n"
         "kernels:\n");
     for (const auto& k : KERNELS) std::printf("  %d  %s\n", k.id, k.name);
-    std::printf("  7  (reserved for your own kernel - see PATHWAY.md)\n");
 }
 
 int main(int argc, char** argv) {
@@ -168,8 +171,7 @@ int main(int argc, char** argv) {
     }
     for (int id : kernel_ids) {
         if (!find_kernel(id)) {
-            std::fprintf(stderr, "kernel %d does not exist%s\n", id,
-                         id == 7 ? " yet - it is your exercise (PATHWAY.md week 3)" : "");
+            std::fprintf(stderr, "kernel %d does not exist\n", id);
             return 1;
         }
     }

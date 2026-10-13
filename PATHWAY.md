@@ -55,10 +55,10 @@ cuda-gemm-optimization/
 ## Week 1 - First GPU run + understand K1–K3
 
 ### 1.1 Setup (day 1)
-- [ ] Push this folder to a **public GitHub repo** (`git init && git add . && git commit && git push`).
-- [ ] If the folder has `build.mk` but no `Makefile`, run `cp build.mk Makefile` once.
-- [ ] Locally: `make test-emu` (needs only g++). All kernels should say `ok`.
-- [ ] Colab: open `notebooks/run_colab.ipynb` (File → Upload notebook), *Runtime → T4 GPU*,
+- [x] Push this folder to a **public GitHub repo** (`git init && git add . && git commit && git push`).
+- [x] If the folder has `build.mk` but no `Makefile`, run `cp build.mk Makefile` once.
+- [x] Locally: `make test-emu` (needs only g++). All kernels should say `ok`.
+- [x] Colab: open `notebooks/run_colab.ipynb` (File → Upload notebook), *Runtime → T4 GPU*,
       set `REPO_URL`, run all cells.
 - [ ] If the build or a kernel fails on the GPU, give Claude Code the exact error:
       > *"On Colab T4 this fails with: <error>. Find the root cause, explain it, propose the
@@ -132,7 +132,8 @@ ncu --set full -k regex:mygemm -c 1 -o results/k6_full ./gemm --kernel 6 --sizes
 
 ### 3.1 K7 - your own kernel (the most important part)
 Create `src/kernels/k7_mine.cuh` starting from K6 and add **at least one** of:
-- [ ] **Fix the K6 bank conflict** (pad As: `BM + 4`, or another layout) → measure conflicts → 0.
+- [x] **Fix the K6 bank conflict** (pad As: `BM + 4`, or another layout) → measure conflicts → 0.
+      *Done in `k7_mine.cuh` (also fixes the Bs read conflict); emulator-verified, T4 conflict count pending.*
 - [ ] **Warp-tiling:** add a warp-level tile (each warp owns e.g. 64×32 of the block tile)
       for better register-level locality.
 - [ ] **Double buffering:** two shared-memory buffers; load tile k+1 while computing tile k.
@@ -146,8 +147,8 @@ Then register it as id 7 in `main.cu` (`KERNELS[]`, `supported()`, `run_kernel()
 > register it as kernel 7. Don't touch k6."*
 
 ### 3.2 Tensor cores (K8 vs K9)
-- [ ] Compare K8 (simple WMMA) with K9 (cuBLAS FP16 tensor cores) and K0 (FP32).
-- [ ] Explain why K8 is far below K9 (no shared-memory staging, tiny warp tiles).
+- [x] Compare K8 (simple WMMA) with K9 (cuBLAS FP16 tensor cores) and K0 (FP32).
+- [x] Explain why K8 is far below K9 (no shared-memory staging, tiny warp tiles).
 - [ ] Optional: stage A/B tiles through shared memory in a K10 and measure the gain.
 - [ ] Link to your systolic-array project: a tensor core is a small matrix-multiply unit.
 

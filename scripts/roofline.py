@@ -24,7 +24,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 # (BM, BN, bytes per input element) for the explicitly tiled kernels
-TILES = {3: (32, 32, 4), 4: (64, 64, 4), 5: (128, 128, 4), 6: (128, 128, 4), 8: (16, 16, 2)}
+TILES = {3: (32, 32, 4), 4: (64, 64, 4), 5: (128, 128, 4), 6: (128, 128, 4), 7: (128, 128, 4), 8: (16, 16, 2)}
 
 
 def estimated_intensity(kid, n):

@@ -35,6 +35,7 @@
 #define __forceinline__ inline
 #define __restrict__
 #define __shared__ static
+#define __align__(n) __attribute__((aligned(n)))
 #define __launch_bounds__(...)
 
 // ----------------------------------------------------------------- built-ins
