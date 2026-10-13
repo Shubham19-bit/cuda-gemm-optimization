@@ -133,7 +133,7 @@ ncu --set full -k regex:mygemm -c 1 -o results/k6_full ./gemm --kernel 6 --sizes
 ### 3.1 K7 - your own kernel (the most important part)
 Create `src/kernels/k7_mine.cuh` starting from K6 and add **at least one** of:
 - [x] **Fix the K6 bank conflict** (pad As: `BM + 4`, or another layout) → measure conflicts → 0.
-      *Done in `k7_mine.cuh` (also fixes the Bs read conflict); emulator-verified, T4 conflict count pending.*
+      *Done in `k7_mine.cuh` (also fixes the Bs read conflict); conflicts 2^28/2^24 -> 0/0 on the T4, +16% over K6 at 4096.*
 - [ ] **Warp-tiling:** add a warp-level tile (each warp owns e.g. 64×32 of the block tile)
       for better register-level locality.
 - [ ] **Double buffering:** two shared-memory buffers; load tile k+1 while computing tile k.
