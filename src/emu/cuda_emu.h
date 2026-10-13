@@ -20,6 +20,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -52,7 +53,37 @@ inline float4 make_float4(float x, float y, float z, float w) { return float4{x,
 
 // FP16 is emulated as float rounded to half precision (_Float16 on x86 g++ >= 12)
 typedef float half;
+#ifdef __FLT16_MAX__
 inline half __float2half(float f) { return (float)(_Float16)f; }
+#else
+// Fallback for older compilers (e.g. g++ 11): round-to-nearest-even to FP16 by bit
+// manipulation, returned as a float. Handles normals, subnormals, overflow, inf/nan.
+inline half __float2half(float f) {
+    uint32_t u;
+    std::memcpy(&u, &f, 4);
+    const uint32_t sign = u & 0x80000000u;
+    const uint32_t a = u & 0x7fffffffu;
+    float out;
+    if (a >= 0x7f800000u) {                       // inf / nan
+        out = f;
+    } else if (a >= 0x477ff000u) {                // rounds to >= 65520 -> inf
+        const uint32_t r = sign | 0x7f800000u;
+        std::memcpy(&out, &r, 4);
+    } else if (a < 0x33000001u) {                 // <= 2^-25 rounds to zero
+        const uint32_t r = sign;
+        std::memcpy(&out, &r, 4);
+    } else {
+        // Quantum of the FP16 grid at this magnitude: 2^(max(e,-14) - 10)
+        int e = (int)(a >> 23) - 127;
+        if (e < -14) e = -14;
+        const float q = std::ldexp(1.0f, e - 10);
+        float v = std::fabs(f) / q;               // exact: power-of-two scaling
+        v = std::nearbyint(v);                    // ties-to-even in default rounding mode
+        out = std::copysign(v * q, f);
+    }
+    return out;
+}
+#endif
 inline float __half2float(half h) { return h; }
 
 // --------------------------------------------------------------- launching
